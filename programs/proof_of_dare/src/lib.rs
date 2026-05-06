@@ -50,23 +50,29 @@ pub mod proof_of_dare {
         Ok(())
     }
 
-    /// Judge (başlangıçta challenger) ödülü onaylar ve parayı karşı tarafa gönderir.
+    /// Sistem (Authority) ödülü onaylar, %10 komisyon keser ve kalanı gönderir.
     pub fn resolve_dare(ctx: Context<ResolveDare>) -> Result<()> {
         let dare = &mut ctx.accounts.dare;
         
         require!(dare.status == DareStatus::Accepted, DareError::InvalidStatus);
-        require!(ctx.accounts.judge.key() == dare.judge, DareError::Unauthorized);
+        // Otorite kontrolü: Sadece platform sahibi onaylayabilir (AI Onayı Sonrası)
+        require!(ctx.accounts.authority.key().to_string() == "81Eei1YU14Uq2a4Qqost8X1TjQFLWxcu9TRyKbzArMyR", DareError::Unauthorized);
 
         dare.status = DareStatus::Resolved;
 
-        // Ödülü challenged kişiye gönder (PDA'dan transfer)
-        let amount = dare.amount;
-        
-        // Lamport transferi (PDA -> challenged)
-        **dare.to_account_info().try_borrow_mut_lamports()? -= amount;
-        **ctx.accounts.challenged.to_account_info().try_borrow_mut_lamports()? += amount;
+        let total_amount = dare.amount;
+        let fee_amount = total_amount / 10; // %10 Komisyon
+        let reward_amount = total_amount - fee_amount;
 
-        msg!("Dare resolved. Reward sent to: {:?}", dare.challenged);
+        // 1. Komisyonu Hazineye Gönder (PDA -> Treasury)
+        **dare.to_account_info().try_borrow_mut_lamports()? -= fee_amount;
+        **ctx.accounts.treasury.to_account_info().try_borrow_mut_lamports()? += fee_amount;
+
+        // 2. Ödülü Kazananan Gönder (PDA -> Winner)
+        **dare.to_account_info().try_borrow_mut_lamports()? -= reward_amount;
+        **ctx.accounts.challenged.to_account_info().try_borrow_mut_lamports()? += reward_amount;
+
+        msg!("Dare resolved. Fee: {}, Reward: {}", fee_amount, reward_amount);
         Ok(())
     }
 
@@ -131,10 +137,13 @@ pub struct ResolveDare<'info> {
         bump = dare.bump
     )]
     pub dare: Account<'info, DareAccount>,
-    pub judge: Signer<'info>,
+    pub authority: Signer<'info>, // Otorite (Sistem)
     #[account(mut)]
     /// CHECK: Ödülü alacak hesap
     pub challenged: AccountInfo<'info>,
+    #[account(mut)]
+    /// CHECK: Komisyonun gideceği hazine cüzdanı
+    pub treasury: AccountInfo<'info>,
 }
 
 #[derive(Accounts)]

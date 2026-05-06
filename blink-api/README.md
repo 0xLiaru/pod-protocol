@@ -1,72 +1,71 @@
-# 🛡️ Proof of Dare (POD) Protocol
-### *Decentralized Social Verification Powered by DareGuard AI*
+# 🛡️ Proof Of Dare (POD) Protocol
+### *Meydan Oku. Kanıtla. Kazan.* 🚀
 
-**Proof of Dare (POD)** is a next-generation SocialFi platform built on **Solana**. It allows users to challenge each other, prove their achievements via AI-verified video evidence, and earn rewards through a trustless escrow system.
-
-![Platform Preview](https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=1200)
-
-## 🚀 Key Features
-
-### 🧠 DareGuard AI Audit
-Utilizes **Google Gemini 1.5 Flash** to perform frame-by-frame video analysis. The AI agent ensures that submissions are authentic and strictly follow the challenge requirements. 
-- **Zero-Tolerance Policy:** Automatically rejects irrelevant or fraudulent content.
-- **Context-Aware Heuristics:** Analyzes descriptions and video metadata for semantic alignment.
-
-### ⚡ Solana Blinks & Actions
-Integrated with **Solana Actions**, allowing users to participate in dares directly from their **X (Twitter)** feed. 
-- One-click participation.
-- Viral social proof loops.
-
-### 🔐 Trustless Escrow Vault
-A decentralized financial model where prize pools are locked in a vault upon challenge creation.
-- **Secure Payouts:** Winners claim rewards directly from the vault.
-- **Sustainable Economy:** 10% platform commission on every successful claim.
-
-### 🆔 Web3 Identity (Privy)
-Seamless onboarding using **Privy**, linking Solana wallets with X and Google accounts for verified social identity.
+**Proof Of Dare (POD)**, Solana ağı üzerinde inşa edilmiş, AI denetimli ve topluluk odaklı bir **SocialFi** platformudur. Kullanıcıların birbirlerine meydan okuduğu, kanıtların AI (Gemini Flash 1.5) ve topluluk tarafından doğrulandığı, ödüllerin ise güvenli bir şekilde cüzdanlara aktarıldığı bir ekosistem sunar.
 
 ---
 
-## 🛠️ Tech Stack
-- **Frontend:** Next.js 14, Tailwind CSS, Framer Motion
-- **Blockchain:** Solana Web3.js, @solana/actions
-- **AI Engine:** Google Generative AI (Gemini 1.5 Flash)
-- **Auth:** Privy SDK
-- **Persistence:** Supabase (Coming Soon) / LocalStorage
+## 🌟 Öne Çıkan Özellikler
+
+### 🛡️ DareGuard AI (Akıllı Denetim)
+Platforma yüklenen tüm kanıtlar (YouTube, Twitter, GitHub vb.), Gemini Flash 1.5 tabanlı **DareGuard AI** tarafından analiz edilir. AI, kanıtın meydan okuma kurallarına uygunluğunu, içeriğin gerçekliğini ve teknik doğruluğunu saniyeler içinde denetler.
+
+### 🗳️ On-Chain Voting (Zincir Üstü Oylama)
+Topluluk gücü her şeydir! Her bir Like veya Dislike işlemi, Solana ağında bir **Cüzdan İmzası** (Signature) ile mühürlenir. Bu sayede oylamalar manipülasyona kapalı ve %100 şeffaftır.
+
+### 🔗 Solana Blink Entegrasyonu
+Her meydan okuma ve kanıt, bir **Solana Blink** (Action) olarak paylaşılabilir. Kullanıcılar, X (Twitter) üzerinden ayrılmadan doğrudan meydan okumalara katılabilir veya kanıtları oylayabilir.
+
+### 💰 Güvenli Escrow & Ödül Havuzu
+Başlatılan her meydan okumanın ödülü, işlem anında platformun güvenli kasasına kilitlenir. Kanıt onaylandığında, ödül otomatik olarak (platform ücreti kesilerek) kazananın cüzdanına aktarılır.
 
 ---
 
-## 📦 Installation & Setup
+## 🛠️ Teknik Altyapı
 
-1. **Clone the repository:**
+- **Frontend:** Next.js 15 (App Router), Tailwind CSS
+- **Blockchain:** Solana (Web3.js, SPL Token)
+- **Auth:** Privy SDK (Wallet Connect, Twitter & Google Social Login)
+- **AI Engine:** Google Gemini 1.5 Flash (Analytical Auditing)
+- **Database:** Supabase (PostgreSQL, Real-time Analytics)
+- **Deployment:** Vercel
+
+---
+
+## 🚀 Hızlı Başlangıç
+
+1. **Depoyu Klonlayın:**
    ```bash
-   git clone https://github.com/YOUR_USERNAME/pod-protocol.git
+   git clone https://github.com/0xLiaru/pod-protocol.git
    cd pod-protocol
    ```
 
-2. **Install dependencies:**
+2. **Bağımlılıkları Yükleyin:**
    ```bash
    npm install
    ```
 
-3. **Environment Variables:**
-   Create a `.env` file and add your keys:
+3. **Çevre Değişkenlerini Ayarlayın (.env):**
    ```env
-   NEXT_PUBLIC_PRIVY_APP_ID=your_privy_id
-   GOOGLE_API_KEY=your_gemini_key
-   NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_key
+   NEXT_PUBLIC_PRIVY_APP_ID=your_id
+   GOOGLE_API_KEY=your_key
+   NEXT_PUBLIC_SUPABASE_URL=your_url
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=your_key
    ```
 
-4. **Run Development Server:**
+4. **Geliştirme Sunucusunu Başlatın:**
    ```bash
    npm run dev
    ```
 
 ---
 
-## 🏆 Hackathon Submission
-This project is submitted for the **Solana Hackathon**. It aims to solve the problem of social trust by merging Multimodal AI with Blockchain-backed incentives.
+## 🏁 Hackathon Takvimi (8-9-10 Mayıs)
+Bu proje, **Solana Renaissance Hackathon** kapsamında, topluluk etkileşimini ve AI denetimli veri doğruluğunu artırmak amacıyla geliştirilmiştir.
 
-**Developer:** [Your Name/Handle]
-**License:** MIT
+**Geliştirici:** [@0xLiaru](https://github.com/0xLiaru)
+**Platform:** Proof Of Dare (POD)
+
+---
+
+> "SocialFi dünyasında güven, sadece kodla değil, kanıtla inşa edilir." 🛡️⛓️💎

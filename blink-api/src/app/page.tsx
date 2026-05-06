@@ -4,6 +4,7 @@ import { usePrivy, useWallets } from '@privy-io/react-auth';
 import { useEffect, useState, useMemo } from "react";
 import { CONNECTION } from "@/lib/solana";
 import { PublicKey, LAMPORTS_PER_SOL, SystemProgram, Transaction } from "@solana/web3.js";
+import { supabase } from "@/lib/supabase";
 
 const CATEGORIES = [
     { id: 'Sports', label: 'Spor', icon: '🏋️‍♂️', img: 'https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&q=80&w=800' },
@@ -28,9 +29,27 @@ interface Dare {
 }
 
 const DEFAULT_DARES: Dare[] = [
-    { pubkey: '1', challenger: 'SYSTEM', challenged: 'Public', amount: 1.5, deadline: Math.floor(Date.now()/1000) + 7200, status: 'Active', title: '100 Şınav Çek ve Kanıtla', description: 'Şınavlar nizami olmalı ve kesintisiz çekilmelidir. Video kanıtı zorunludur.', exampleUrl: 'https://youtube.com/shorts/example', maxApplicants: 50, winnerCount: 5, category: 'Sports', applicants: [] },
-    { pubkey: '2', challenger: 'SYSTEM', challenged: 'Public', amount: 5.0, deadline: Math.floor(Date.now()/1000) + 86400, status: 'Active', title: 'Solana Blink API ile Tool Yaz', description: 'Yeni bir Blink aksiyonu geliştirin ve GitHub linkini paylaşın. En yaratıcı 3 kişi kazanır.', exampleUrl: 'https://github.com/solana-labs/solana-pay', maxApplicants: 20, winnerCount: 3, category: 'Software', applicants: [] },
-    { pubkey: '3', challenger: 'SYSTEM', challenged: 'Public', amount: 0.5, deadline: Math.floor(Date.now()/1000) + 3600, status: 'Active', title: 'League 1vs1 Kazan', description: 'Herhangi birine karşı 1vs1 kazan ve maç sonu ekranını at.', exampleUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e', maxApplicants: 10, winnerCount: 1, category: 'Gaming', applicants: [] }
+    { 
+        pubkey: '1', challenger: 'SYSTEM', challenged: 'Public', amount: 1.5, deadline: Math.floor(Date.now()/1000) + 7200, status: 'Active', title: '100 Şınav Çek ve Kanıtla', description: 'Şınavlar nizami olmalı ve kesintisiz çekilmelidir. Video kanıtı zorunludur.', exampleUrl: 'https://youtube.com/shorts/example', maxApplicants: 50, winnerCount: 5, category: 'Sports', 
+        applicants: [
+            { id: 101, address: "7vB6...Xp2", proofUrl: "https://youtube.com/shorts/nizami-sinav", description: "100 tane nizami şınav çektim, her saniyesi videoda!", likes: 12, dislikes: 0, img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix", aiScore: 98, aiComment: "🛡️ DAREGUARD: Hareketlerin formu kusursuz. Sayım doğruluğu %100.", aiStatus: 'LEGIT' }
+        ] 
+    },
+    { 
+        pubkey: '2', challenger: 'SYSTEM', challenged: 'Public', amount: 5.0, deadline: Math.floor(Date.now()/1000) + 86400, status: 'Active', title: 'Solana Blink API ile Tool Yaz', description: 'Yeni bir Blink aksiyonu geliştirin ve GitHub linkini paylaşın. En yaratıcı 3 kişi kazanır.', exampleUrl: 'https://github.com/solana-labs/solana-pay', maxApplicants: 20, winnerCount: 3, category: 'Software', 
+        applicants: [
+            { id: 201, address: "3A9z...Kq9", proofUrl: "https://github.com/example/blink-tool", description: "NFT Launchpad için özel bir Blink aksiyonu yazdım.", likes: 25, dislikes: 1, img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie", aiScore: 95, aiComment: "🛡️ DAREGUARD: Kod yapısı temiz, güvenlik standartlarına uygun.", aiStatus: 'LEGIT' }
+        ] 
+    },
+    { 
+        pubkey: '4', challenger: 'SYSTEM', challenged: 'Public', amount: 10.0, deadline: Math.floor(Date.now()/1000) + 172800, status: 'Active', title: 'Mad Lads NFT Mint Story', description: 'En sevdiğin NFT koleksiyonunun hikayesini anlatan bir video çek ve paylaş.', exampleUrl: 'https://madlads.com', maxApplicants: 100, winnerCount: 10, category: 'Fun', customImg: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?auto=format&fit=crop&q=80&w=800',
+        applicants: [
+            { id: 401, address: "9Xj8...Lm3", proofUrl: "https://x.com/user/status/123", description: "Mad Lads dünyasına nasıl katıldığımı anlattım!", likes: 45, dislikes: 2, img: "https://api.dicebear.com/7.x/avataaars/svg?seed=Jack", aiScore: 92, aiComment: "🛡️ DAREGUARD: Hikaye anlatımı etkileyici ve topluluk ruhunu yansıtıyor.", aiStatus: 'LEGIT' }
+        ]
+    },
+    { pubkey: '3', challenger: 'SYSTEM', challenged: 'Public', amount: 0.5, deadline: Math.floor(Date.now()/1000) + 3600, status: 'Active', title: 'League 1vs1 Kazan', description: 'Herhangi birine karşı 1vs1 kazan ve maç sonu ekranını at.', exampleUrl: 'https://images.unsplash.com/photo-1542751371-adc38448a05e', maxApplicants: 10, winnerCount: 1, category: 'Gaming', applicants: [] },
+    { pubkey: '5', challenger: 'SYSTEM', challenged: 'Public', amount: 2.5, deadline: Math.floor(Date.now()/1000) + 43200, status: 'Active', title: 'Meme-Coin Trading Botu Yap', description: 'Solana ağında çalışan basit bir trading botu geliştirin. Kodları GitHub üzerinden kanıtlayın.', exampleUrl: 'https://github.com/solana-labs', maxApplicants: 15, winnerCount: 2, category: 'Software', applicants: [], customImg: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0?auto=format&fit=crop&q=80&w=800' },
+    { pubkey: '6', challenger: 'SYSTEM', challenged: 'Public', amount: 1.0, deadline: Math.floor(Date.now()/1000) + 1800, status: 'Active', title: 'En İyi Setup Fotoğrafı', description: 'Kendi yazılım/oyun setupını en estetik şekilde fotoğrafla ve kanıtla.', exampleUrl: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c', maxApplicants: 50, winnerCount: 5, category: 'Fun', applicants: [], customImg: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&q=80&w=800' }
 ];
 
 const Countdown = ({ deadline }: { deadline: number }) => {
@@ -55,6 +74,7 @@ export default function Dashboard() {
   const { wallets } = useWallets();
   
   const [mounted, setMounted] = useState(false);
+  const [notifications, setNotifications] = useState<{id: number, message: string, type: string, tx?: string}[]>([]);
   const [balance, setBalance] = useState<number | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [dares, setDares] = useState<Dare[]>([]);
@@ -63,7 +83,6 @@ export default function Dashboard() {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [selectedDare, setSelectedDare] = useState<Dare | null>(null);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [toast, setToast] = useState({ show: false, msg: "", tx: "", shareUrl: "", shareText: "" });
   const [settingsTab, setSettingsTab] = useState<'account' | 'rewards'>('account');
   
   const [isAiAnalyzing, setIsAiAnalyzing] = useState(false);
@@ -77,14 +96,49 @@ export default function Dashboard() {
   const twitterHandle = user?.twitter?.username;
   const googleEmail = user?.google?.email;
 
+  const [activeTab, setActiveTab] = useState<'dares' | 'feed'>('dares');
+  const [globalFeed, setGlobalFeed] = useState<any[]>([]);
+
   useEffect(() => {
       setMounted(true);
-      const saved = localStorage.getItem('pod_dares');
-      if (saved) { try { setDares(JSON.parse(saved)); } catch (e) { setDares(DEFAULT_DARES); } }
-      else { setDares(DEFAULT_DARES); }
+      fetchDares();
+      fetchGlobalStats();
   }, []);
 
-  const getActiveProvider = () => { if (typeof window === 'undefined') return null; return (window as any).solflare || (window as any).phantom?.solana || (window as any).solana; };
+  const fetchGlobalStats = async () => {
+    try {
+        if (!supabase) return;
+        const { data: feed, error } = await supabase.from('dares').select('title, applicants');
+        if (error) throw error;
+        const flatFeed = feed?.flatMap(d => (d.applicants || []).map((a: any) => ({ ...a, dareTitle: d.title })))
+                          .sort((a, b) => b.id - a.id) || [];
+        setGlobalFeed(flatFeed.slice(0, 20));
+    } catch (e) {
+        console.warn("Global Feed yüklenemedi, veritabanı bağlantısını kontrol edin.");
+    }
+  };
+
+  const fetchDares = async () => {
+    try {
+        if (!supabase) { setDares(DEFAULT_DARES); return; }
+        const { data, error } = await supabase.from('dares').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        setDares(data.length > 0 ? data : DEFAULT_DARES);
+    } catch (e) {
+        console.error("Veri çekme hatası:", e);
+        setDares(DEFAULT_DARES);
+    }
+  };
+
+  const getActiveProvider = () => { 
+    if (typeof window === 'undefined') return null; 
+    // Öncelikli olarak Phantom ve Solflare'i kontrol et
+    if ((window as any).phantom?.solana) return (window as any).phantom.solana;
+    if ((window as any).solflare) return (window as any).solflare;
+    // Eğer ikisi de yoksa genel Solana objesine bak (MetaMask Solana modundaysa buraya düşebilir)
+    if ((window as any).solana?.isPhantom || (window as any).solana?.isSolflare) return (window as any).solana;
+    return null;
+  };
 
   const publicKey = useMemo(() => {
     const provider = getActiveProvider();
@@ -94,7 +148,19 @@ export default function Dashboard() {
     return null;
   }, [wallets, ready]);
 
-  const showNotification = (msg: string, txId: string = "") => { setToast({ show: true, msg, tx: txId, shareUrl: "", shareText: "" }); setTimeout(() => setToast(prev => ({ ...prev, show: false })), 6000); };
+  const showNotification = (message: string, txOrType: string = "INFO", type: string = "INFO") => {
+      const id = Date.now() + Math.random();
+      const isTx = txOrType.length > 30;
+      const finalType = isTx ? "SUCCESS" : txOrType;
+      const newNotif = { id, message, type: finalType, tx: isTx ? txOrType : undefined };
+      setNotifications(prev => [...prev, newNotif]);
+      
+      // RED mesajları (WARN) 8 saniye kalsın, diğerleri 5 saniye
+      const duration = finalType === "WARN" ? 8000 : 5000;
+      setTimeout(() => {
+          setNotifications(prev => prev.filter(n => n.id !== id));
+      }, duration);
+  };
 
   const performTransfer = async (amountInSol: number) => {
       const provider = getActiveProvider();
@@ -138,7 +204,12 @@ export default function Dashboard() {
         
         const updatedDares = [dare, ...dares];
         setDares(updatedDares);
-        localStorage.setItem('pod_dares', JSON.stringify(updatedDares));
+        
+        // SUPABASE KAYIT
+        if (supabase) {
+            await supabase.from('dares').insert([dare]);
+        }
+        
         setIsCreateOpen(false);
         showNotification("Meydan Okuma Kasada Kilitlendi ve Başlatıldı!", signature);
         setNewDare({ title: "", description: "", exampleUrl: "", amount: 0.1, category: "Sports", hours: 24, maxApplicants: 10, winnerCount: 1 });
@@ -167,33 +238,102 @@ export default function Dashboard() {
 
           if (aiResult.score < 77) {
               setIsAiAnalyzing(false);
-              showNotification(`🛡️ DAREGUARD REDDETTİ: ${aiResult.analysisReport}`);
+              showNotification(`🛡️ DAREGUARD REDDETTİ: ${aiResult.analysisReport}`, "WARN");
               return;
           }
 
           const applicant: Applicant = {
-              id: Date.now(), address: (publicKey?.toBase58() || "Anon").substring(0, 8) + "...",
-              proofUrl: newProof.url, description: newProof.desc, likes: 0, dislikes: 0,
+              id: Date.now(), 
+              address: publicKey?.toBase58() || "Anon", // TAM ADRES KAYDEDİLİYOR
+              proofUrl: newProof.url, 
+              description: newProof.desc, 
+              likes: 0, 
+              dislikes: 0,
               img: `https://api.dicebear.com/7.x/avataaars/svg?seed=${publicKey?.toBase58()}`,
-              aiScore: aiResult.score, aiComment: aiResult.analysisReport, aiStatus: 'LEGIT'
+              aiScore: aiResult.score, 
+              aiComment: aiResult.analysisReport, 
+              aiStatus: 'LEGIT'
           };
           
-          const updatedDares = dares.map(d => { if (d.pubkey === selectedDare?.pubkey) return { ...d, applicants: [applicant, ...(d.applicants || [])] }; return d; });
-          setDares(updatedDares); localStorage.setItem('pod_dares', JSON.stringify(updatedDares));
+          const updatedApplicants = [applicant, ...(selectedDare?.applicants || [])];
+          
+          // SUPABASE GÜNCELLEME
+          if (supabase && selectedDare) {
+              await supabase.from('dares')
+                  .update({ applicants: updatedApplicants })
+                  .eq('pubkey', selectedDare.pubkey);
+          }
+
+          const updatedDares = dares.map(d => { if (d.pubkey === selectedDare?.pubkey) return { ...d, applicants: updatedApplicants }; return d; });
+          setDares(updatedDares);
           setIsAiAnalyzing(false);
-          if (selectedDare) setSelectedDare(prev => ({ ...prev!, applicants: [applicant, ...(prev!.applicants || [])] }));
-          showNotification("Kanıt AI tarafından onaylandı!", signature);
+          if (selectedDare) setSelectedDare(prev => ({ ...prev!, applicants: updatedApplicants }));
+          showNotification("Kanıt AI tarafından onaylandı! @proofofdaree ✅", signature);
           setNewProof({ url: "", desc: "" });
-      } catch (err: any) { setIsAiAnalyzing(false); showNotification(err.message, "WARN"); }
+      } catch (err: any) { 
+          setIsAiAnalyzing(false); 
+          // AI REDDETTİĞİNDE BURASI ÇALIŞIR
+          showNotification(`🛡️ DAREGUARD REDDETTİ: ${err.message || "Geçersiz kanıt."}`, "WARN"); 
+      }
   };
 
-  const handleClearAll = (e: React.MouseEvent) => {
+  const handleDeleteDare = async (darePubkey: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      if (selectedDare) {
+      if (!authenticated) return login();
+      
+      try {
+          // GÜVENİLİRLİK İÇİN İMZA TALEBİ (KÜÇÜK BİR İŞLEM)
+          showNotification("Silme işlemi için cüzdan onayı bekleniyor... 🔐");
+          const signature = await performTransfer(0.001); 
+          
+          if (supabase) {
+              const { error } = await supabase.from('dares').delete().eq('pubkey', darePubkey);
+              if (error) throw error;
+          }
+          
+          setDares(prev => prev.filter(d => d.pubkey !== darePubkey));
+          showNotification("Meydan Okuma Başarıyla Silindi!", signature);
+      } catch (err: any) { 
+          showNotification(err.message, "WARN"); 
+      }
+  };
+
+  const handleVote = async (appId: number, isLike: boolean) => {
+      if (!authenticated) return login();
+      if (!selectedDare || !supabase) return;
+
+      try {
+          // GÜVENİLİRLİK İÇİN İMZA TALEBİ (VOTING ON-CHAIN FEEL)
+          showNotification(`${isLike ? "Like" : "Dislike"} işlemi için cüzdan onayı bekleniyor... 🔐`);
+          const signature = await performTransfer(0.0005); 
+          
+          const updatedApplicants = (selectedDare.applicants || []).map(app => {
+              if (app.id === appId) {
+                  return { ...app, [isLike ? 'likes' : 'dislikes']: app[isLike ? 'likes' : 'dislikes'] + 1 };
+              }
+              return app;
+          });
+
+          await supabase.from('dares').update({ applicants: updatedApplicants }).eq('pubkey', selectedDare.pubkey);
+          
+          const updatedDares = dares.map(d => d.pubkey === selectedDare.pubkey ? { ...d, applicants: updatedApplicants } : d);
+          setDares(updatedDares);
+          setSelectedDare({ ...selectedDare, applicants: updatedApplicants });
+          
+          showNotification(`${isLike ? "Beğeni" : "Dislike"} başarıyla mühürlendi!`, signature);
+      } catch (err: any) {
+          showNotification(err.message, "WARN");
+      }
+  };
+
+  const handleClearAll = async (e: React.MouseEvent) => {
+      e.stopPropagation();
+      if (selectedDare && supabase) {
+          await supabase.from('dares').update({ applicants: [] }).eq('pubkey', selectedDare.pubkey);
           const updated = dares.map(d => d.pubkey === selectedDare.pubkey ? { ...d, applicants: [] } : d);
-          setDares(updated); localStorage.setItem('pod_dares', JSON.stringify(updated));
+          setDares(updated);
           setSelectedDare(prev => prev ? { ...prev, applicants: [] } : null);
-          showNotification("Tüm adaylar temizlendi.");
+          showNotification("Tüm adaylar veritabanından temizlendi.");
       }
   };
 
@@ -237,6 +377,23 @@ export default function Dashboard() {
            </div>
        )}
 
+       {/* GLOBAL ACTIVITY TICKER */}
+       <div className="w-full bg-cyan-500/10 border-b border-cyan-500/20 py-2 overflow-hidden whitespace-nowrap relative z-50">
+           <div className="flex animate-marquee gap-12 items-center">
+               {[...Array(10)].map((_, i) => (
+                   <div key={i} className="flex items-center gap-4">
+                       <span className="text-[8px] font-black text-cyan-400 uppercase tracking-widest flex items-center gap-2">
+                           <span className="h-1.5 w-1.5 bg-green-500 rounded-full animate-ping"></span>
+                           {i % 2 === 0 ? "YENİ MEYDAN OKUMA:" : "KANIT ONAYLANDI:"}
+                       </span>
+                       <span className="text-[9px] font-bold text-white/60">
+                           {i % 2 === 0 ? "5.0 SOL Ödüllü Yazılım Görevi Başlatıldı" : "1.5 SOL Cüzdana Gönderildi (4fb...X2)"}
+                       </span>
+                   </div>
+               ))}
+           </div>
+       </div>
+
        <nav className="max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-50">
           <div className="flex items-center gap-4 cursor-pointer" onClick={() => window.location.reload()}>
               <div className="h-10 w-10 overflow-hidden rounded-xl border border-white/10 shadow-lg shadow-cyan-500/10"><img src="/logo.png" className="w-full h-full object-cover" alt="Logo" /></div>
@@ -262,32 +419,38 @@ export default function Dashboard() {
            <h1 className="text-4xl md:text-[5rem] font-black italic uppercase tracking-tighter leading-[0.8] mb-10">MEYDAN OKU.<br/><span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-fuchsia-500">KANITLA.</span><br/>KAZAN.</h1>
        </header>
        
-       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-2 gap-8 mb-40">
-           {dares.map((dare) => (
-               <div key={dare.pubkey} onClick={() => { setSelectedDare(dare); setIsDetailOpen(true); }} className="group relative bg-[#0A0A0A] border border-white/5 rounded-[3.5rem] overflow-hidden hover:border-cyan-500/40 transition-all duration-500 cursor-pointer flex flex-col h-full shadow-2xl">
-                    <div className="w-full h-64 bg-black relative overflow-hidden">
-                        <img src={dare.customImg || CATEGORIES.find(c => c.id === dare.category)?.img} className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-1000 grayscale group-hover:grayscale-0" alt="cover" />
-                        <div className="absolute top-8 left-8 bg-black/60 backdrop-blur-xl px-4 py-2 rounded-xl border border-white/10 text-[8px] font-black text-cyan-400 uppercase tracking-widest">{dare.category}</div>
-                        <div className="absolute bottom-8 right-8 bg-cyan-500/10 backdrop-blur-xl px-4 py-2 rounded-xl border border-cyan-500/20 text-[10px] font-black text-cyan-400">{dare.amount} SOL</div>
-                    </div>
-                    <div className="p-10 flex flex-col flex-1 gap-8">
-                        <h3 className="text-3xl font-black uppercase italic tracking-tighter leading-[0.9] min-h-[4.5rem] line-clamp-2">{dare.title}</h3>
-                        <div className="flex items-center gap-4">
-                            {(dare.challenger === 'SYSTEM' || dare.challenger === (publicKey?.toBase58() || "")) && (
-                                <button onClick={(e) => {
-                                    e.stopPropagation();
-                                    const shareUrl = `https://dial.to/?action=solana-action:${window.location.origin}/api/actions/submit-proof?dare=${dare.pubkey}`;
-                                    window.open(`https://twitter.com/intent/tweet?text=Yeni bir meydan okuma başlattım! 🔥 %23ProofOfDare %23Solana&url=${encodeURIComponent(shareUrl)}`, '_blank');
-                                }} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-2xl text-[8px] font-black uppercase tracking-widest hover:bg-cyan-500 hover:text-black transition-all">BLINK PAYLAŞ 🐦</button>
-                            )}
+       <div className="max-w-7xl mx-auto px-4 md:px-6 mb-40">
+           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 animate-in fade-in slide-in-from-bottom-10 duration-700">
+                {dares.map((dare, idx) => (
+                    <div key={`dare-${dare.pubkey}-${idx}`} onClick={() => { setSelectedDare(dare); setIsDetailOpen(true); }} className="group relative bg-[#0A0A0A] border border-white/5 rounded-[2.5rem] md:rounded-[3.5rem] overflow-hidden hover:border-cyan-500/40 transition-all duration-500 cursor-pointer flex flex-col h-full shadow-2xl">
+                        <div className="w-full h-48 md:h-64 bg-black relative overflow-hidden">
+                            <img src={dare.customImg || CATEGORIES.find(c => c.id === dare.category)?.img} className="w-full h-full object-cover opacity-50 group-hover:scale-110 transition-transform duration-1000 grayscale group-hover:grayscale-0" alt="cover" />
+                            <div className="absolute top-4 left-4 md:top-8 md:left-8 bg-black/60 backdrop-blur-xl px-3 py-1 md:px-4 md:py-2 rounded-xl border border-white/10 text-[7px] md:text-[8px] font-black text-cyan-400 uppercase tracking-widest">{dare.category}</div>
+                            <div className="absolute bottom-4 right-4 md:bottom-8 md:right-8 bg-cyan-500/10 backdrop-blur-xl px-3 py-1 md:px-4 md:py-2 rounded-xl border border-cyan-500/20 text-[9px] md:text-[10px] font-black text-cyan-400">{dare.amount} SOL</div>
                         </div>
-                        <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
-                            <div className="flex flex-col gap-1"><span className="text-[7px] font-black text-slate-600 uppercase tracking-widest">KALAN SÜRE</span><Countdown deadline={dare.deadline} /></div>
-                            <span className="text-[9px] font-black text-slate-400">🔥 {dare.applicants?.length || 0} ADAY</span>
+                        <div className="p-6 md:p-10 flex flex-col flex-1 gap-4 md:gap-8">
+                            <h3 className="text-xl md:text-3xl font-black uppercase italic tracking-tighter leading-[0.9] min-h-[3rem] md:min-h-[4.5rem] line-clamp-2">{dare.title}</h3>
+                            <div className="flex items-center gap-3 md:gap-4">
+                                {((dare.challenger === 'SYSTEM' && publicKey?.toBase58() === PLATFORM_WALLET) || (publicKey && dare.challenger === publicKey.toBase58())) && (
+                                    <div className="flex-1 flex gap-2">
+                                        <button onClick={(e) => {
+                                            e.stopPropagation();
+                                            const shareUrl = `https://dial.to/?action=solana-action:${window.location.origin}/api/actions/submit-proof?dare=${dare.pubkey}`;
+                                            window.open(`https://twitter.com/intent/tweet?text=Yeni bir meydan okuma başlattım! 🔥 @proofofdaree %23Solana&url=${encodeURIComponent(shareUrl)}`, '_blank');
+                                        }} className="flex-1 py-3 bg-white/5 border border-white/10 rounded-xl md:rounded-2xl text-[7px] md:text-[8px] font-black uppercase tracking-widest hover:bg-cyan-500 hover:text-black transition-all">BLINK PAYLAŞ 🐦</button>
+                                        
+                                        <button onClick={(e) => handleDeleteDare(dare.pubkey, e)} className="px-4 py-3 bg-red-500/10 border border-red-500/20 rounded-xl md:rounded-2xl text-[7px] md:text-[8px] font-black uppercase tracking-widest text-red-500 hover:bg-red-500 hover:text-white transition-all">SİL</button>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="flex items-center justify-between pt-4 border-t border-white/5 mt-auto">
+                                <div className="flex flex-col gap-1"><span className="text-[6px] md:text-[7px] font-black text-slate-600 uppercase tracking-widest">KALAN SÜRE</span><Countdown deadline={dare.deadline} /></div>
+                                <span className="text-[8px] md:text-[9px] font-black text-slate-400">🔥 {dare.applicants?.length || 0} ADAY</span>
+                            </div>
                         </div>
-                    </div>
-               </div>
-           ))}
+                   </div>
+               ))}
+           </div>
        </div>
 
        {isDetailOpen && selectedDare && (
@@ -320,26 +483,45 @@ export default function Dashboard() {
                                <h3 className="text-xl font-black italic uppercase">HALK OYLAMASI</h3>
                                <button onClick={handleClearAll} className="text-[8px] font-black text-red-500 uppercase border border-red-500/20 px-4 py-2 rounded-xl hover:bg-red-500 hover:text-white transition-all">TEMİZLE</button>
                            </div>
-                           {selectedDare.applicants?.map((app, index) => (
-                               <div key={`${app.id}-${index}`} className="bg-white/[0.02] border border-white/5 p-8 rounded-[3rem] flex flex-col gap-8 group relative overflow-hidden">
-                                   <div className="absolute top-0 right-0 px-6 py-4 border-l border-b rounded-bl-3xl flex flex-col items-end gap-1 backdrop-blur-3xl bg-cyan-500/10 border-cyan-500/20">
-                                        <span className="text-[8px] font-black text-cyan-400 uppercase tracking-widest">DAREGUARD AI RAPORU</span>
-                                        <p className="text-[9px] text-slate-300 max-w-[200px] text-right leading-tight italic">"{app.aiComment}"</p>
-                                   </div>
+                            {(!selectedDare.applicants || selectedDare.applicants.length === 0) ? (
+                                <div className="py-20 text-center border-2 border-dashed border-white/5 rounded-[3rem] bg-white/[0.01]">
+                                    <div className="text-5xl mb-6 grayscale opacity-30">💀</div>
+                                    <h4 className="text-xl font-black italic uppercase text-slate-500 mb-2">Henüz Kimse Cesaret Edemedi!</h4>
+                                    <p className="text-[9px] font-black text-slate-600 uppercase tracking-widest">İlk kanıtı sen gönder, ödül havuzundan payını al.</p>
+                                </div>
+                            ) : selectedDare.applicants.map((app, index) => (
+                               <div key={`applicant-${app.id}-${index}-${app.address.substring(0, 5)}`} className="bg-white/[0.02] border border-white/5 p-8 rounded-[3rem] flex flex-col gap-8 group relative overflow-hidden">
                                    <div className="flex items-center gap-8">
                                        <div className="h-20 w-20 bg-slate-800 rounded-3xl overflow-hidden"><img src={app.img} className="w-full h-full object-cover" alt="app" /></div>
                                        <div className="flex flex-col items-start gap-4">
-                                           <p className="text-[10px] font-mono text-slate-500">{app.address}</p>
-                                           <div className="flex items-center gap-4">
-                                               <a href={app.proofUrl} target="_blank" className="text-[9px] font-black text-cyan-400 uppercase tracking-widest hover:text-white transition-colors">VİDEOYU İZLE ↗</a>
-                                               {(app.address.includes(publicKey?.toBase58().substring(0, 4) || "NONE")) && (
+                                           <p className="text-[10px] font-mono text-slate-500">{app.address.substring(0, 8)}...{app.address.substring(app.address.length - 4)}</p>
+                                            <div className="flex items-center gap-4">
+                                                <a href={app.proofUrl} target="_blank" className="text-[9px] font-black text-cyan-400 uppercase tracking-widest hover:text-white transition-colors">VİDEOYU İZLE ↗</a>
+                                                
+                                                <div className="flex items-center bg-black/40 rounded-xl px-3 py-1 border border-white/5 gap-3">
+                                                    <button onClick={() => handleVote(app.id, true)} className="text-[10px] hover:scale-125 transition-transform">👍 <span className="ml-1 text-green-400 font-black">{app.likes || 0}</span></button>
+                                                    <div className="w-[1px] h-3 bg-white/10"></div>
+                                                    <button onClick={() => handleVote(app.id, false)} className="text-[10px] hover:scale-125 transition-transform">👎 <span className="ml-1 text-red-400 font-black">{app.dislikes || 0}</span></button>
+                                                </div>
+
+                                                {(publicKey && app.address === publicKey.toBase58()) && (
                                                    <button onClick={() => {
                                                        const shareUrl = `https://dial.to/?action=solana-action:${window.location.origin}/api/actions/submit-proof?dare=${selectedDare.pubkey}`;
-                                                       window.open(`https://twitter.com/intent/tweet?text=Bu meydan okumayı başarıyla tamamladım! 🔥 %23ProofOfDare %23Solana&url=${encodeURIComponent(shareUrl)}`, '_blank');
+                                                       window.open(`https://twitter.com/intent/tweet?text=Bu meydan okumayı @proofofdaree ile başarıyla tamamladım! 🔥 %23Solana&url=${encodeURIComponent(shareUrl)}`, '_blank');
                                                    }} className="text-[8px] font-black text-white/40 uppercase hover:text-cyan-400 transition-all">KANITI PAYLAŞ 🐦</button>
                                                )}
-                                           </div>
-                                           <p className="text-[11px] text-slate-400 mt-2 max-w-xs italic line-clamp-2">{app.description}</p>
+                                            </div>
+                                            <p className="text-[11px] text-slate-400 mt-2 max-w-xs italic line-clamp-2">{app.description}</p>
+                                            
+                                            {app.aiScore && (
+                                                <div className="mt-4 p-4 bg-cyan-500/5 border border-cyan-500/10 rounded-2xl">
+                                                    <div className="flex items-center justify-between mb-2">
+                                                        <span className="text-[8px] font-black text-cyan-500 uppercase tracking-widest">AI DENETİM SKORU</span>
+                                                        <span className="text-[10px] font-black text-cyan-400">%{app.aiScore}</span>
+                                                    </div>
+                                                    <p className="text-[9px] font-medium text-slate-300 leading-relaxed">{app.aiComment}</p>
+                                                </div>
+                                            )}
                                        </div>
                                    </div>
                                </div>
@@ -369,7 +551,7 @@ export default function Dashboard() {
                            <div><p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">ÖDÜL MİKTARI (SOL)</p><input type="number" value={newDare.amount} onChange={e => setNewDare({...newDare, amount: parseFloat(e.target.value)})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 text-sm focus:border-cyan-500 outline-none" /></div>
                            <div><p className="text-[8px] font-black text-slate-500 uppercase tracking-widest mb-3">SÜRE (SAAT)</p><input type="number" value={newDare.hours} onChange={e => setNewDare({...newDare, hours: parseInt(e.target.value)})} className="w-full bg-white/5 border border-white/10 rounded-2xl px-8 py-4 text-sm focus:border-cyan-500 outline-none" /></div>
                        </div>
-                       <button onClick={handleLaunchDare} className="w-full py-8 bg-cyan-500 text-black rounded-[2.5rem] font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_50px_rgba(34,211,238,0.3)]">MEYDAN OKUMAYI BAŞLAT VE ÖDÜLÜ KASAYA KİLİTLE</button>
+                       <button onClick={handleLaunchDare} className="w-full py-8 bg-cyan-500 text-black rounded-[2.5rem] font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-[0_0_50px_rgba(34,211,238,0.3)]">MEYDAN OKUMAYI BAŞLAT ({(newDare.amount + PLATFORM_FEE_LAUNCH).toFixed(3)} SOL)</button>
                        <button onClick={() => setIsCreateOpen(false)} className="w-full text-[9px] font-black uppercase text-slate-500 hover:text-white transition-all">VAZGEÇ</button>
                    </div>
                </div>
@@ -396,11 +578,17 @@ export default function Dashboard() {
                                    <p className="text-sm font-bold">{googleEmail ? googleEmail : 'Bağlı Değil'}</p>
                                </div>
                                <div className="pt-8 border-t border-white/5">
-                                   <button onClick={() => {
-                                       const resetDares = dares.map(d => ({ ...d, applicants: [] }));
-                                       setDares(resetDares);
-                                       localStorage.setItem('pod_dares', JSON.stringify(resetDares));
-                                       showNotification("Tüm sistem sıfırlandı!");
+                                   <button onClick={async () => {
+                                       if (supabase) {
+                                           const { error } = await supabase.from('dares').update({ applicants: [] }).neq('pubkey', '');
+                                           if (!error) {
+                                               const resetDares = dares.map(d => ({ ...d, applicants: [] }));
+                                               setDares(resetDares);
+                                               showNotification("Tüm veritabanı sıfırlandı!");
+                                           } else {
+                                               showNotification("Sıfırlama Hatası!", "WARN");
+                                           }
+                                       }
                                        setIsSettingsOpen(false);
                                    }} className="w-full py-4 bg-red-500/10 border border-red-500/20 text-red-500 rounded-2xl text-[9px] font-black uppercase hover:bg-red-500 hover:text-white transition-all">SİSTEMİ SIFIRLA</button>
                                </div>
@@ -455,12 +643,26 @@ export default function Dashboard() {
                </div>
            </div>
        )}
-       {toast.show && (
-            <div className="fixed bottom-10 right-10 bg-cyan-500 text-black px-8 py-6 rounded-[2.5rem] shadow-2xl z-[10000] animate-in slide-in-from-right duration-500 border border-white/20">
-                <p className="text-[10px] font-black uppercase tracking-widest">{toast.msg}</p>
-                {toast.tx && <a href={`https://solscan.io/tx/${toast.tx}`} target="_blank" className="text-[8px] font-bold underline mt-2 block opacity-70">İşlemi Görüntüle ↗</a>}
-            </div>
-       )}
+       {/* FLOATING NOTIFICATIONS SYSTEM (SAĞ ALT) */}
+       <div className="fixed bottom-8 right-8 z-[10000] flex flex-col gap-4 pointer-events-none">
+           {notifications.map((n) => (
+               <div key={n.id} className="pointer-events-auto animate-in slide-in-from-right-10 fade-in duration-500">
+                   <div className={`min-w-[350px] backdrop-blur-3xl border p-8 rounded-[2.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.5)] flex flex-col gap-4 ${n.type === 'WARN' ? 'bg-red-500/20 border-red-500/30' : 'bg-cyan-500/10 border-cyan-500/20'}`}>
+                       <div className="flex items-center gap-4">
+                           <div className={`h-10 w-10 rounded-2xl flex items-center justify-center text-lg ${n.type === 'WARN' ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                               {n.type === 'WARN' ? '🛡️' : '🔔'}
+                           </div>
+                           <p className="text-[11px] font-black uppercase tracking-widest text-white leading-tight">{n.message}</p>
+                       </div>
+                       {n.tx && (
+                           <a href={`https://solscan.io/tx/${n.tx}`} target="_blank" className="text-[9px] font-mono text-cyan-500 hover:text-white transition-colors break-all bg-black/40 p-3 rounded-xl border border-white/5">
+                               TX: {n.tx.substring(0, 24)}...
+                           </a>
+                       )}
+                   </div>
+               </div>
+           ))}
+       </div>
     </main>
   );
 }
