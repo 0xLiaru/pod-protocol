@@ -1,15 +1,18 @@
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
+
+// Akıllı sözleşme ID'si
+export const PROGRAM_ID = new PublicKey("4SVC6ey1Akve6Aiz3Z6sUgwfzT7VEWbfMpyjdjqRhzz8");
+
+// Sitenin ana URL'si (Blink'ler için gerekli)
+export const BASE_URL = typeof window !== 'undefined' 
+    ? window.location.origin 
+    : (process.env.NEXT_PUBLIC_BASE_URL || 'https://pod-protocol.vercel.app');
 
 // Artık doğrudan dışarıya değil, kendi oluşturduğumuz güvenli köprüye (proxy) bağlanıyoruz.
-// Bu sayede tarayıcı engellerinden (CORS, Failed to Fetch) kurtuluyoruz.
 export const RPC_ENDPOINT = typeof window !== 'undefined' 
     ? `${window.location.origin}/api/rpc` 
     : "https://solana-mainnet.chainstacklabs.com"; 
 
 export const CONNECTION = new Connection(RPC_ENDPOINT, {
-    commitment: "confirmed",
-    fetchMiddleware: (url, options, fetch) => {
-        // Tarayıcı tarafında bağlantıyı her zaman bizim /api/rpc üzerinden geçir
-        return fetch(url, options);
-    }
+    commitment: "confirmed"
 });

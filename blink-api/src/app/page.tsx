@@ -18,7 +18,7 @@ const PLATFORM_FEE_LAUNCH = 0.01;
 const PLATFORM_FEE_SUBMIT = 0.005;
 
 interface Applicant {
-    id: number; address: string; proofUrl: string; description?: string; likes: number; dislikes: number; img: string;
+    id: number; address: string; proofUrl: string; description: string; likes: number; dislikes: number; img: string;
     aiScore?: number; aiComment?: string; aiStatus?: 'LEGIT' | 'SUSPICIOUS';
 }
 
@@ -309,7 +309,8 @@ export default function Dashboard() {
           
           const updatedApplicants = (selectedDare.applicants || []).map(app => {
               if (app.id === appId) {
-                  return { ...app, [isLike ? 'likes' : 'dislikes']: app[isLike ? 'likes' : 'dislikes'] + 1 };
+                  const key = isLike ? 'likes' : 'dislikes';
+                  return { ...app, [key]: (app[key] as number || 0) + 1 };
               }
               return app;
           });
